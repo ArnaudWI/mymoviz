@@ -19,6 +19,30 @@ import { Container,
   import {faHeart} from '@fortawesome/free-solid-svg-icons'
 
 class App extends Component {
+
+  state = {
+    popoverOpen: false,
+    viewOnlyLike: false
+  };
+
+  toggle = () => {
+    this.setState({
+      popoverOpen: !this.state.popoverOpen
+    });
+  }
+
+  handleClickLikeOn = () => {
+    this.setState({
+      viewOnlyLike: true
+    });
+  }
+
+  handleClickLikeOff = () => {
+    this.setState({
+      viewOnlyLike: false
+    });
+  }
+
   render() {
 
     const moviesData = [
@@ -55,17 +79,43 @@ class App extends Component {
     ]
 
     let movieList = moviesData.map((movie , i) => {
-      return <Moviz key={i} movieName={movie.name} movieDesc={movie.desc} movieImg={movie.img}/>
+      return <Moviz key={i} movieName={movie.name} movieDesc={movie.desc}
+        movieImg={movie.img} displayOnlyLike={this.state.viewOnlyLike}/>
     });
 
     let moviesNameList = moviesData.map((movie) => {
       return movie.name
     });
-    console.log(moviesNameList);
+
+    let moviesLast = moviesNameList.slice(-3);
+    let moviesCount = moviesNameList.length;
+
+    if (moviesCount === 0) {
+      moviesLast = 'aucun films sélectionnés';
+    } else if (moviesCount > 3 ) {
+      moviesLast = moviesLast.join( ', ') + '...';
+    } else {
+      moviesLast = moviesLast.join( ', ') + '.';
+    }
 
     return (
       <Container>
-        <Header moviesCount={moviesNameList.length} moviesNameList={moviesNameList}/>
+        <Nav style={styles.nav}>
+          <img src='logo.png' alt="logo"/>
+          <NavLink style={styles.navlink} onClick={this.handleClickLikeOff}>
+            Last Releases
+          </NavLink>
+          <NavLink style={styles.navlink} onClick={this.handleClickLikeOn}>
+            My Movies
+          </NavLink>
+          <Button id="Popover1" type="button">
+            {moviesCount} {moviesCount > 1 ? 'films' : 'film'}
+          </Button>
+          <Popover placement="bottom" isOpen={this.state.popoverOpen} target="Popover1" toggle={this.toggle}>
+            <PopoverHeader>Derniers films ajoutés</PopoverHeader>
+            <PopoverBody>{moviesLast}</PopoverBody>
+          </Popover>
+        </Nav>
         <Row>
           {movieList}
         </Row>
@@ -74,62 +124,45 @@ class App extends Component {
   }
 }
 
-class Header extends Component {
+class Moviz extends Component {
+
   state = {
-    popoverOpen: false
+    like: false
   };
 
-  toggle = () => {
+  handleClick = () => {
+    let isLike = !this.state.like
     this.setState({
-      popoverOpen: !this.state.popoverOpen
+      like : isLike
     });
   }
 
   render() {
-
-    let moviesLast = this.props.moviesNameList.slice(-3);
-    console.log(moviesLast);
-
-    if (this.props.moviesCount === 0) {
-      moviesLast = 'aucun films sélectionnés';
-    } else if (this.props.moviesCount > 3 ) {
-      moviesLast = moviesLast.join( ', ') + '...';
+    console.log(this.state.like)
+    if (this.state.like) {
+      styles.heart.color = '#FF5B53';
     } else {
-      moviesLast = moviesLast.join( ', ') + '.';
+      styles.heart.color = 'white';
     }
 
-    return (
-      <Nav style={styles.nav}>
-        <img src='logo.png' alt="logo"/>
-        <NavLink style={styles.navlink}>
-          Last Releases
-        </NavLink>
-        <NavLink style={styles.navlink}>
-          My Movies
-        </NavLink>
-        <Button id="Popover1" type="button">
-          {this.props.moviesCount} {this.props.moviesCount > 1 ? 'films' : 'film'}
-        </Button>
-        <Popover placement="bottom" isOpen={this.state.popoverOpen} target="Popover1" toggle={this.toggle}>
-          <PopoverHeader>Derniers films ajoutés</PopoverHeader>
-          <PopoverBody>{moviesLast}</PopoverBody>
-        </Popover>
-      </Nav>
-    );
-  }
-}
+    let isDisplay = {
+      marginBottom: 15
+    }
 
-class Moviz extends Component {
-  render() {
+    if (!this.state.like && this.props.displayOnlyLike) {
+      isDisplay.display = 'none';
+    }
+
+
     return (
-      <Col xs='12' sm='6' lg='3' style={styles.colcard}>
+      <Col xs='12' sm='6' lg='3' style={isDisplay}>
         <Card>
           <CardImg top width="100%" src={this.props.movieImg} alt="Card image cap" />
           <CardBody style={styles.cardbody}>
             <CardTitle>{this.props.movieName}</CardTitle>
             <CardText>{this.props.movieDesc}</CardText>
           </CardBody>
-          <FontAwesomeIcon icon={faHeart} style={styles.heart}/>
+          <FontAwesomeIcon icon={faHeart} style={styles.heart} onClick={this.handleClick}/>
         </Card>
       </Col>
     );
